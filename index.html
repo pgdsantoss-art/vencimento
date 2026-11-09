@@ -58,11 +58,12 @@ h2 { font-family: var(--display); font-size: 1.1rem; margin: 0 0 12px; }
 .head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); font-weight: 500; }
 input, select, button { font: inherit; }
-input, select { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; min-height: 42px; width: 100%; }
-input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+input, select, textarea { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; min-height: 42px; width: 100%; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 button { cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 9px 14px; min-height: 42px; font-weight: 600; }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 button.small { min-height: 34px; padding: 4px 10px; font-weight: 500; }
+textarea { font-size: .8rem; min-height: 90px; resize: vertical; font-family: ui-monospace, Menlo, Consolas, monospace; }
 .notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
 .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
@@ -170,6 +171,18 @@ tfoot td { font-weight: 700; }
       </label>
     </div>
     <p class="foot" style="margin:12px 0 0">Valores tirados do recibo de outubro de 2026. Se a tabela mudar, altera aqui. O resultado é uma estimativa.</p>
+  </section>
+  <section class="card">
+    <h2>Passar dados para outro aparelho</h2>
+    <p class="foot" style="margin:0 0 12px">1. No aparelho com os turnos, carrega em «Copiar dados». 2. No outro aparelho, cola o texto na caixa e carrega em «Importar dados». A importação substitui os turnos deste aparelho.</p>
+    <label>Dados
+      <textarea id="xfer" rows="4" placeholder="Os dados copiados aparecem aqui. Para importar, cola aqui."></textarea>
+    </label>
+    <div class="actions">
+      <button type="button" class="primary" id="btnCopy">Copiar dados</button>
+      <button type="button" id="btnImport">Importar dados</button>
+    </div>
+    <p class="foot" id="xferMsg" role="status" style="margin:10px 0 0"></p>
   </section>
 </div>
 
@@ -339,6 +352,38 @@ function init() {
     save(); render();
   }
   ["rWd", "rWe", "rRet"].forEach(function (id) { $(id).addEventListener("input", readRates); });
+
+  $("btnCopy").addEventListener("click", function () {
+    var data = JSON.stringify({ v: 1, rates: state.rates, entries: state.entries.map(function (e) { return { date: e.date, shift: e.shift, hours: e.hours, holiday: e.holiday }; }) });
+    $("xfer").value = data;
+    function done(ok) {
+      $("xferMsg").textContent = ok ? "Dados copiados. Cola no outro aparelho." : "Não consegui copiar sozinho. Seleciona o texto da caixa e copia.";
+      if (!ok) { $("xfer").focus(); $("xfer").select(); }
+    }
+    try { navigator.clipboard.writeText(data).then(function () { done(true); }, function () { done(false); }); } catch (err) { done(false); }
+  });
+  $("btnImport").addEventListener("click", function () {
+    var msg = $("xferMsg");
+    try {
+      var o = JSON.parse($("xfer").value.trim());
+      if (!o || !Array.isArray(o.entries)) throw new Error("formato");
+      var ids = SHIFTS.map(function (s) { return s.id; }).concat([EXTRA]);
+      var ok = o.entries.filter(function (e) { return e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && ids.indexOf(e.shift) >= 0; });
+      state.entries = withIds(ok);
+      if (o.rates && isFinite(o.rates.wd) && isFinite(o.rates.we) && isFinite(o.rates.ret)) {
+        state.rates = { wd: Number(o.rates.wd), we: Number(o.rates.we), ret: Number(o.rates.ret) };
+        $("rWd").value = state.rates.wd; $("rWe").value = state.rates.we; $("rRet").value = state.rates.ret;
+      }
+      if (ok.length && !monthEntries().length) {
+        var last = ok.map(function (e) { return e.date; }).sort().pop().slice(0, 7);
+        state.month = last; $("month").value = last; $("fDate").value = last + "-01";
+      }
+      state.example = false; save(); render();
+      msg.textContent = "Importados " + ok.length + " turnos.";
+    } catch (err) {
+      msg.textContent = "Não consegui ler os dados. Copia outra vez no outro aparelho e cola aqui.";
+    }
+  });
 
   render();
 }
