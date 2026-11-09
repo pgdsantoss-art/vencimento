@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vencimento Leirivida</title>
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vencimento">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: resumo no topo, depois adicionar turno, lista do mês, valores por hora e detalhe por turno */
+:root {
+  --bg: #f3f6f7;
+  --surface: #ffffff;
+  --ink: #12262b;
+  --muted: #5a6f75;
+  --line: #d9e2e5;
+  --accent: #0f766e;
+  --accent-ink: #ffffff;
+  --we: #4f46e5;
+  --we-bg: #e8e7fc;
+  --wd-bg: #e1f1ef;
+  --warn-bg: #fff3d6;
+  --warn-ink: #7a5200;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1a1d; --surface: #152428; --ink: #e6f0f2; --muted: #93a9ae; --line: #27393e;
+    --accent: #4fd1c5; --accent-ink: #062321; --we: #a5a1ff; --we-bg: #26254a; --wd-bg: #173a37;
+    --warn-bg: #3a2f10; --warn-ink: #f3d089; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1a1d; --surface: #152428; --ink: #e6f0f2; --muted: #93a9ae; --line: #27393e;
+  --accent: #4fd1c5; --accent-ink: #062321; --we: #a5a1ff; --we-bg: #26254a; --wd-bg: #173a37;
+  --warn-bg: #3a2f10; --warn-ink: #f3d089; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-family: var(--display); font-size: 1.7rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 1.1rem; margin: 0 0 12px; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); font-weight: 500; }
+input, select, button { font: inherit; }
+input, select { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; min-height: 42px; width: 100%; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+button { cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 9px 14px; min-height: 42px; font-weight: 600; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.small { min-height: 34px; padding: 4px 10px; font-weight: 500; }
+.notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.tile small { color: var(--muted); font-weight: 500; display: block; }
+.tile strong { font-family: var(--display); font-size: 1.45rem; font-variant-numeric: tabular-nums; display: block; margin-top: 2px; }
+.tile.main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tile.main small { color: inherit; opacity: .85; }
+@media (max-width: 520px) { .summary { grid-template-columns: 1fr; } .tile strong { font-size: 1.3rem; } }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+.check { flex-direction: row; align-items: center; gap: 8px; min-height: 42px; color: var(--ink); }
+.check input { width: 20px; min-height: 20px; height: 20px; }
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.row { display: grid; grid-template-columns: 92px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.day { font-weight: 600; text-transform: capitalize; font-variant-numeric: tabular-nums; }
+.what small { color: var(--muted); display: block; }
+.chip { font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--wd-bg); color: var(--accent); white-space: nowrap; }
+.chip.we { background: var(--we-bg); color: var(--we); }
+.val { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.flag { color: var(--warn-ink); background: var(--warn-bg); border-radius: 6px; padding: 1px 6px; font-size: .78rem; }
+@media (max-width: 520px) { .row { grid-template-columns: 1fr auto; } .row .chip { justify-self: start; } .day { grid-column: 1 / -1; } }
+.empty { color: var(--muted); padding: 12px 0; }
+.rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 8px 6px; border-top: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { border-top: 0; color: var(--muted); font-weight: 500; font-size: .85rem; }
+tfoot td { font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.foot { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Vencimento Leirivida</h1>
+      <p class="sub">Escolhe os turnos do mês e vê quanto vais receber.</p>
+    </div>
+    <label style="min-width:170px">Mês
+      <input type="month" id="month">
+    </label>
+  </header>
+
+  <div class="notice" id="exampleNotice" hidden>
+    Estás a ver o exemplo do recibo de outubro de 2026. Muda o mês acima e adiciona os teus turnos, ou carrega em «Limpar este mês» para começar.
+  </div>
+
+  <section class="summary" aria-label="Resumo do mês">
+    <div class="tile"><small>Total bruto</small><strong id="gross">0,00 €</strong></div>
+    <div class="tile"><small id="retLabel">Retenção 25%</small><strong id="ret">0,00 €</strong></div>
+    <div class="tile main"><small>A receber (líquido)</small><strong id="net">0,00 €</strong></div>
+  </section>
+
+  <section class="card">
+    <h2>Adicionar turno</h2>
+    <form class="form" id="addForm">
+      <label>Dia
+        <input type="date" id="fDate" required>
+      </label>
+      <label>Turno
+        <select id="fShift"></select>
+      </label>
+      <label id="hoursBox" hidden>Horas extra
+        <input type="number" id="fHours" min="0.5" step="0.5" value="1">
+      </label>
+      <label class="check"><input type="checkbox" id="fHoliday"> Feriado</label>
+      <button class="primary" type="submit">Adicionar</button>
+    </form>
+    <p class="foot" id="preview" style="margin:10px 0 0"></p>
+  </section>
+
+  <section class="card">
+    <h2>Turnos do mês</h2>
+    <ul class="list" id="list"></ul>
+    <div class="actions">
+      <button type="button" class="small" id="clearMonth">Limpar este mês</button>
+      <button type="button" class="small" id="loadExample">Carregar exemplo de outubro</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Resumo por turno</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Turno</th><th>Semana</th><th>Fim de semana</th><th>Total</th></tr></thead>
+        <tbody id="byShift"></tbody>
+        <tfoot id="byShiftFoot"></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Valores usados</h2>
+    <div class="rates">
+      <label>Valor por hora (semana, €)
+        <input type="number" id="rWd" min="0" step="0.5">
+      </label>
+      <label>Valor por hora (fim de semana, €)
+        <input type="number" id="rWe" min="0" step="0.5">
+      </label>
+      <label>Retenção (%)
+        <input type="number" id="rRet" min="0" max="60" step="0.5">
+      </label>
+    </div>
+    <p class="foot" style="margin:12px 0 0">Valores tirados do recibo de outubro de 2026. Se a tabela mudar, altera aqui. O resultado é uma estimativa.</p>
+  </section>
+</div>
+
+<script>
+var SHIFTS = [
+  { id: "M Leiria",   wd: 5,   we: 5,    wdTxt: "9h–14h",       weTxt: "9h–14h" },
+  { id: "MT Leiria",  wd: 8,   we: 8,    wdTxt: "9h–17h",       weTxt: "9h–17h" },
+  { id: "T L Leiria", wd: 5,   we: 5,    wdTxt: "17h–22h",      weTxt: "17h–22h" },
+  { id: "T C Leiria", wd: 8,   we: 8,    wdTxt: "14h–22h",      weTxt: "14h–22h" },
+  { id: "M MG",       wd: 4,   we: 3,    wdTxt: "9h30–13h30",   weTxt: "10h–13h" },
+  { id: "T MG",       wd: 5,   we: null, wdTxt: "17h–22h",      weTxt: "" },
+  { id: "T M1",       wd: 6.5, we: null, wdTxt: "15h30–22h",    weTxt: "" }
+];
+var EXTRA = "Horas extra";
+var KEY = "vencimento-leirivida-v1";
+
+var EXAMPLE = [
+  { date: "2026-10-19", shift: "M MG" },
+  { date: "2026-10-19", shift: EXTRA, hours: 1 },
+  { date: "2026-10-20", shift: "M MG" },
+  { date: "2026-10-20", shift: EXTRA, hours: 1.5 },
+  { date: "2026-10-21", shift: "MT Leiria" },
+  { date: "2026-10-24", shift: "MT Leiria" },
+  { date: "2026-10-24", shift: "T L Leiria" },
+  { date: "2026-10-25", shift: "T L Leiria" },
+  { date: "2026-10-27", shift: "M MG" },
+  { date: "2026-10-28", shift: "M MG" },
+  { date: "2026-10-30", shift: "T L Leiria" },
+  { date: "2026-10-31", shift: "T L Leiria" }
+];
+
+var state = { rates: { wd: 19, we: 21.5, ret: 25 }, entries: [], month: "2026-10", example: true };
+var nextId = 1;
+
+function withIds(list) {
+  return list.map(function (e) { return { id: nextId++, date: e.date, shift: e.shift, hours: e.hours || 0, holiday: !!e.holiday }; });
+}
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      if (s && s.entries && s.rates) { state = s; nextId = state.entries.reduce(function (m, e) { return Math.max(m, e.id); }, 0) + 1; return; }
+    }
+  } catch (err) {}
+  state.entries = withIds(EXAMPLE);
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (err) {} }
+
+var eur = new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" });
+function money(cents) { return eur.format(cents / 100); }
+function parts(d) { var p = d.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function isWeekend(entry) { var wd = parts(entry.date).getDay(); return wd === 0 || wd === 6 || entry.holiday; }
+
+function calc(e) {
+  var we = isWeekend(e);
+  var rate = we ? state.rates.we : state.rates.wd;
+  var hours, label, note = "";
+  if (e.shift === EXTRA) {
+    hours = Number(e.hours) || 0; label = hours + " h extra";
+  } else {
+    var s = SHIFTS.filter(function (x) { return x.id === e.shift; })[0];
+    if (we && s.we !== null) { hours = s.we; label = s.weTxt + " · " + hours + " h"; }
+    else { hours = s.wd; label = s.wdTxt + " · " + hours + " h"; if (we) note = "Este turno não existe ao fim de semana no teu recibo. Usei as horas de semana."; }
+  }
+  return { cents: Math.round(hours * rate * 100), hours: hours, we: we, label: label, note: note };
+}
+
+function monthEntries() {
+  return state.entries.filter(function (e) { return e.date.indexOf(state.month) === 0; })
+    .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id; });
+}
+function $(id) { return document.getElementById(id); }
+
+function render() {
+  var list = monthEntries();
+  var gross = 0, byShift = {};
+  var li = "";
+  list.forEach(function (e) {
+    var c = calc(e);
+    gross += c.cents;
+    var b = byShift[e.shift] || (byShift[e.shift] = { wd: 0, we: 0, n: 0 });
+    b[c.we ? "we" : "wd"] += c.cents; b.n += 1;
+    var dayTxt = parts(e.date).toLocaleDateString("pt-PT", { weekday: "short", day: "2-digit", month: "2-digit" });
+    li += '<li class="row"><span class="day">' + dayTxt + '</span>' +
+      '<span class="what"><strong>' + e.shift + '</strong><small>' + c.label + (e.holiday ? " · feriado" : "") + '</small>' +
+      (c.note ? '<span class="flag">' + c.note + '</span>' : "") + '</span>' +
+      '<span class="chip' + (c.we ? " we" : "") + '">' + (c.we ? "Fim de semana" : "Semana") + '</span>' +
+      '<span class="val">' + money(c.cents) + ' <button type="button" class="small" data-del="' + e.id + '" aria-label="Apagar turno de ' + dayTxt + '">Apagar</button></span></li>';
+  });
+  $("list").innerHTML = li || '<li class="empty">Ainda não há turnos neste mês. Adiciona o primeiro acima.</li>';
+
+  var ret = Math.round(gross * state.rates.ret / 100);
+  $("gross").textContent = money(gross);
+  $("ret").textContent = "−" + money(ret);
+  $("net").textContent = money(gross - ret);
+  $("retLabel").textContent = "Retenção " + String(state.rates.ret).replace(".", ",") + "%";
+
+  var order = SHIFTS.map(function (s) { return s.id; }).concat([EXTRA]);
+  var rows = "", tw = 0, te = 0;
+  order.forEach(function (id) {
+    var b = byShift[id]; if (!b) return;
+    tw += b.wd; te += b.we;
+    rows += "<tr><td>" + id + " (" + b.n + ")</td><td>" + money(b.wd) + "</td><td>" + money(b.we) + "</td><td>" + money(b.wd + b.we) + "</td></tr>";
+  });
+  $("byShift").innerHTML = rows || '<tr><td colspan="4" class="empty">Sem dados.</td></tr>';
+  $("byShiftFoot").innerHTML = rows ? "<tr><td>Total</td><td>" + money(tw) + "</td><td>" + money(te) + "</td><td>" + money(tw + te) + "</td></tr>" : "";
+
+  $("exampleNotice").hidden = !(state.example && state.month === "2026-10");
+  updatePreview();
+}
+
+function updatePreview() {
+  var d = $("fDate").value; if (!d) { $("preview").textContent = ""; return; }
+  var e = { date: d, shift: $("fShift").value, hours: Number($("fHours").value), holiday: $("fHoliday").checked };
+  var c = calc(e);
+  $("preview").textContent = "Este turno vale " + money(c.cents) + " (" + (c.we ? "valor de fim de semana" : "valor de semana") + ").";
+}
+
+function init() {
+  load();
+  var sel = $("fShift");
+  sel.innerHTML = SHIFTS.map(function (s) { return '<option value="' + s.id + '">' + s.id + " (" + s.wdTxt + ")</option>"; }).join("") +
+    '<option value="' + EXTRA + '">' + EXTRA + "</option>";
+  $("month").value = state.month;
+  $("fDate").value = state.month + "-01";
+  $("rWd").value = state.rates.wd; $("rWe").value = state.rates.we; $("rRet").value = state.rates.ret;
+
+  $("month").addEventListener("change", function () {
+    if (!this.value) return;
+    state.month = this.value; $("fDate").value = state.month + "-01"; save(); render();
+  });
+  $("fHours").disabled = true;
+  sel.addEventListener("change", function () { var extra = sel.value === EXTRA; $("hoursBox").hidden = !extra; $("fHours").disabled = !extra; updatePreview(); });
+  ["fDate", "fHours", "fHoliday"].forEach(function (id) { $(id).addEventListener("input", updatePreview); });
+
+  $("addForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var d = $("fDate").value; if (!d) return;
+    var entry = { date: d, shift: sel.value, hours: sel.value === EXTRA ? Number($("fHours").value) : 0, holiday: $("fHoliday").checked };
+    state.entries = state.entries.concat(withIds([entry]));
+    var m = d.slice(0, 7);
+    if (m !== state.month) { state.month = m; $("month").value = m; }
+    state.example = false; save(); render();
+  });
+
+  $("list").addEventListener("click", function (ev) {
+    var id = ev.target.getAttribute && ev.target.getAttribute("data-del"); if (!id) return;
+    state.entries = state.entries.filter(function (e) { return String(e.id) !== id; });
+    save(); render();
+  });
+
+  $("clearMonth").addEventListener("click", function () {
+    state.entries = state.entries.filter(function (e) { return e.date.indexOf(state.month) !== 0; });
+    state.example = false; save(); render();
+  });
+  $("loadExample").addEventListener("click", function () {
+    state.entries = state.entries.filter(function (e) { return e.date.indexOf("2026-10") !== 0; }).concat(withIds(EXAMPLE));
+    state.month = "2026-10"; $("month").value = state.month; $("fDate").value = "2026-10-01";
+    state.example = true; save(); render();
+  });
+
+  function readRates() {
+    state.rates.wd = Math.max(0, parseFloat($("rWd").value) || 0);
+    state.rates.we = Math.max(0, parseFloat($("rWe").value) || 0);
+    state.rates.ret = Math.min(60, Math.max(0, parseFloat($("rRet").value) || 0));
+    save(); render();
+  }
+  ["rWd", "rWe", "rRet"].forEach(function (id) { $(id).addEventListener("input", readRates); });
+
+  render();
+}
+init();
+if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
+</script>
+</body>
+</html>
